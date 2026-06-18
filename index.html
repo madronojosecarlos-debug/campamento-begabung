@@ -198,44 +198,56 @@
     reflectAll();
   }
 
-  // Candado: un toque marca y bloquea; para desmarcar hay que mantener pulsado HOLD ms.
+  // Candado: marcar funciona de forma nativa (fiable). Solo protegemos el DESMARCAR:
+  // un toque sobre una casilla marcada NO la quita; hay que mantener pulsado HOLD ms.
   boxes.forEach(function(b){
     var chk=b.parentNode;                 // el <label class="chk ...">
     var pg=document.createElement('i'); pg.className='pg'; chk.appendChild(pg);
     var lk=document.createElement('i'); lk.className='lk'; lk.textContent='🔒'; chk.appendChild(lk);
-    var timer=null, consumed=false;
+    var timer=null, suppressClick=false;
 
-    function cancelUnlock(){
+    function cancelHold(){
       if(timer){ clearTimeout(timer); timer=null; }
       chk.classList.remove('unlocking');
       pg.style.transitionDuration='130ms';
       lk.textContent='🔒';
     }
-    function startUnlock(){
+    function startHold(){
       pg.style.transitionDuration=HOLD+'ms';
       chk.classList.add('unlocking');
       lk.textContent='🔓';
       timer=setTimeout(function(){
-        timer=null; consumed=true;
-        b.checked=false; delete saved[b.id]; persist();
+        timer=null;
         chk.classList.remove('unlocking');
         pg.style.transitionDuration='130ms';
         lk.textContent='🔒';
+        suppressClick=true;               // evita que el "soltar" lo vuelva a marcar
+        b.checked=false;                  // programatico: no dispara 'change'
+        delete saved[b.id]; persist(); update();
         try{ if(navigator.vibrate) navigator.vibrate(35); }catch(e){}
-        update();
       }, HOLD);
     }
 
-    chk.addEventListener('click', function(e){
-      e.preventDefault();
-      if(consumed){ consumed=false; return; }      // venimos de un desbloqueo: no re-marcar
-      if(!b.checked){ b.checked=true; saved[b.id]=true; persist(); update(); }
-      // si ya estaba marcado, un toque no lo quita (hay que mantener pulsado)
+    // Marcado/desmarcado nativo del navegador
+    b.addEventListener('change', function(){
+      if(b.checked){
+        saved[b.id]=true; persist(); update();
+      } else {
+        // intento de desmarcar con un toque suelto: lo revertimos
+        b.checked=true;
+      }
     });
-    chk.addEventListener('pointerdown', function(e){ if(b.checked) startUnlock(); });
-    chk.addEventListener('pointerup', cancelUnlock);
-    chk.addEventListener('pointerleave', cancelUnlock);
-    chk.addEventListener('pointercancel', cancelUnlock);
+
+    // Si acabamos de desbloquear, anular el click de "soltar dedo"
+    chk.addEventListener('click', function(e){
+      if(suppressClick){ suppressClick=false; e.preventDefault(); e.stopPropagation(); }
+    });
+
+    // Mantener pulsado sobre una casilla marcada = desbloquear y desmarcar
+    chk.addEventListener('pointerdown', function(){ if(b.checked) startHold(); });
+    chk.addEventListener('pointerup', cancelHold);
+    chk.addEventListener('pointerleave', cancelHold);
+    chk.addEventListener('pointercancel', cancelHold);
   });
 
   document.querySelectorAll('[data-all]').forEach(function(btn){
