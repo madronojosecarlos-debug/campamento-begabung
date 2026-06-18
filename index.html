@@ -47,6 +47,11 @@
   .tip{background:#e9f7ef;border-color:#bce8ce;}.tip h3{color:#1b7a4b;}
   .info{margin:14px 12px;background:#eef3fb;border:1px solid #cfe0f7;border-radius:14px;padding:12px 15px;font-size:13.5px;line-height:1.5;}
   .foot{text-align:center;font-size:11px;color:#9aa6ba;margin:22px 12px 0;}
+  .chk{-webkit-touch-callout:none;user-select:none;touch-action:manipulation;}
+  .chk .pg{position:absolute;left:0;top:0;height:100%;width:0;background:rgba(11,61,145,.55);border-radius:9px;pointer-events:none;z-index:3;transition:width 130ms linear;}
+  .chk.unlocking .pg{width:100%;}
+  .chk .lk{position:absolute;top:-6px;right:-5px;font-size:12px;line-height:1;display:none;z-index:4;pointer-events:none;filter:drop-shadow(0 1px 1px rgba(0,0,0,.3));}
+  .chk.locked .lk{display:block;}
   #confetti{position:fixed;inset:0;pointer-events:none;z-index:99;overflow:hidden;display:none;}
   .conf{position:absolute;top:-20px;width:9px;height:14px;border-radius:2px;animation:fall linear forwards;}
   @keyframes fall{to{transform:translateY(110vh) rotate(540deg);opacity:.9;}}
@@ -157,6 +162,7 @@
 
 <script>
   var KEY="equipaje_begabung_v3";
+  var HOLD=2000; // ms que hay que mantener pulsado para desbloquear y desmarcar
   var boxes=Array.prototype.slice.call(document.querySelectorAll('input[type=checkbox]'));
   var saved={};
   try{ saved=JSON.parse(localStorage.getItem(KEY)||"{}"); }catch(e){}
@@ -171,6 +177,13 @@
     return list.length? Math.round(done/list.length*100):0;
   }
 
+  function reflectAll(){
+    boxes.forEach(function(b){
+      var chk=b.parentNode;
+      if(b.checked) chk.classList.add('locked'); else chk.classList.remove('locked');
+    });
+  }
+
   function update(){
     var done=0; boxes.forEach(function(b){ if(b.checked) done++; });
     var p=Math.round(done/boxes.length*100);
@@ -182,13 +195,47 @@
     document.getElementById('doneBanner').style.display=complete?'block':'none';
     if(complete && !wasComplete) celebrate();
     wasComplete=complete;
+    reflectAll();
   }
 
+  // Candado: un toque marca y bloquea; para desmarcar hay que mantener pulsado HOLD ms.
   boxes.forEach(function(b){
-    b.addEventListener('change',function(){
-      if(b.checked) saved[b.id]=true; else delete saved[b.id];
-      persist(); update();
+    var chk=b.parentNode;                 // el <label class="chk ...">
+    var pg=document.createElement('i'); pg.className='pg'; chk.appendChild(pg);
+    var lk=document.createElement('i'); lk.className='lk'; lk.textContent='🔒'; chk.appendChild(lk);
+    var timer=null, consumed=false;
+
+    function cancelUnlock(){
+      if(timer){ clearTimeout(timer); timer=null; }
+      chk.classList.remove('unlocking');
+      pg.style.transitionDuration='130ms';
+      lk.textContent='🔒';
+    }
+    function startUnlock(){
+      pg.style.transitionDuration=HOLD+'ms';
+      chk.classList.add('unlocking');
+      lk.textContent='🔓';
+      timer=setTimeout(function(){
+        timer=null; consumed=true;
+        b.checked=false; delete saved[b.id]; persist();
+        chk.classList.remove('unlocking');
+        pg.style.transitionDuration='130ms';
+        lk.textContent='🔒';
+        try{ if(navigator.vibrate) navigator.vibrate(35); }catch(e){}
+        update();
+      }, HOLD);
+    }
+
+    chk.addEventListener('click', function(e){
+      e.preventDefault();
+      if(consumed){ consumed=false; return; }      // venimos de un desbloqueo: no re-marcar
+      if(!b.checked){ b.checked=true; saved[b.id]=true; persist(); update(); }
+      // si ya estaba marcado, un toque no lo quita (hay que mantener pulsado)
     });
+    chk.addEventListener('pointerdown', function(e){ if(b.checked) startUnlock(); });
+    chk.addEventListener('pointerup', cancelUnlock);
+    chk.addEventListener('pointerleave', cancelUnlock);
+    chk.addEventListener('pointercancel', cancelUnlock);
   });
 
   document.querySelectorAll('[data-all]').forEach(function(btn){
