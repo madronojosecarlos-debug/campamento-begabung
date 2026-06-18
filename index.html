@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Equipaje campamento · Pedro y Carlos</title>
+<meta name="theme-color" content="#0b3d91">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Campamento">
+<link rel="apple-touch-icon" href="icon.png">
+<link rel="icon" href="icon.png">
+<style>
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:#f2f4f8;color:#13233b;padding-bottom:50px;}
+  header{background:linear-gradient(135deg,#1b66d6,#0b3d91);color:#fff;padding:max(20px,env(safe-area-inset-top)) 16px 16px;}
+  header h1{margin:0 0 4px;font-size:19px;}
+  header p{margin:0;font-size:13px;opacity:.92;}
+  .legend{display:flex;gap:14px;margin-top:10px;font-size:12px;flex-wrap:wrap;}
+  .legend span{display:flex;align-items:center;gap:5px;}
+  .dotP{width:12px;height:12px;border-radius:3px;background:#ffd23f;display:inline-block;}
+  .dotC{width:12px;height:12px;border-radius:3px;background:#5ee0a0;display:inline-block;}
+  .progress-wrap{background:rgba(255,255,255,.25);border-radius:20px;height:10px;margin-top:12px;overflow:hidden;}
+  .progress-bar{background:#fff;height:100%;width:0;transition:width .35s;}
+  .progress-txt{font-size:12px;margin-top:6px;text-align:center;opacity:.95;}
+  .perchild{display:flex;gap:10px;margin-top:10px;}
+  .perchild div{flex:1;background:rgba(255,255,255,.14);border-radius:10px;padding:7px 10px;font-size:12px;text-align:center;}
+  .perchild b{display:block;font-size:15px;margin-top:2px;}
+  .tools{display:flex;gap:8px;margin:12px 12px 0;flex-wrap:wrap;}
+  .tools button{flex:1;min-width:120px;border:none;border-radius:10px;padding:10px;font-size:12.5px;font-weight:700;cursor:pointer;background:#e7edf7;color:#234;}
+  .tools button.reset{background:#fdecec;color:#a33;}
+  section{margin:14px 12px;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.06);}
+  .sec-title{font-size:15px;font-weight:700;padding:13px 15px;background:#eef3fb;border-bottom:1px solid #e3eaf5;}
+  .item{display:flex;align-items:center;justify-content:space-between;padding:11px 15px;border-bottom:1px solid #f0f2f6;gap:10px;}
+  .item:last-child{border-bottom:none;}
+  .lbl{font-size:14.5px;line-height:1.3;flex:1;}
+  .checks{display:flex;gap:7px;flex-shrink:0;}
+  .chk{position:relative;width:46px;height:40px;}
+  .chk input{position:absolute;opacity:0;width:100%;height:100%;margin:0;cursor:pointer;}
+  .chk span{display:flex;align-items:center;justify-content:center;width:100%;height:100%;border-radius:9px;border:2px solid #d7deea;background:#fbfcfe;font-size:12px;font-weight:700;color:#9aa6ba;pointer-events:none;}
+  .chk.p input:checked+span{background:#ffd23f;border-color:#e9b400;color:#5a4500;}
+  .chk.c input:checked+span{background:#5ee0a0;border-color:#27b277;color:#0a4a31;}
+  .chk input:checked+span::before{content:"✓ ";}
+  .note{margin:14px 12px;background:#fff7e6;border:1px solid #ffe2a8;border-radius:14px;padding:14px 16px;font-size:13.5px;line-height:1.5;}
+  .note h3{margin:0 0 8px;font-size:15px;color:#9a6b00;}
+  .note ul{margin:0;padding-left:18px;}.note li{margin:4px 0;}
+  .tip{background:#e9f7ef;border-color:#bce8ce;}.tip h3{color:#1b7a4b;}
+  .info{margin:14px 12px;background:#eef3fb;border:1px solid #cfe0f7;border-radius:14px;padding:12px 15px;font-size:13.5px;line-height:1.5;}
+  .foot{text-align:center;font-size:11px;color:#9aa6ba;margin:22px 12px 0;}
+  #confetti{position:fixed;inset:0;pointer-events:none;z-index:99;overflow:hidden;display:none;}
+  .conf{position:absolute;top:-20px;width:9px;height:14px;border-radius:2px;animation:fall linear forwards;}
+  @keyframes fall{to{transform:translateY(110vh) rotate(540deg);opacity:.9;}}
+  .done-banner{display:none;margin:14px 12px;background:#e9f7ef;border:1px solid #9fdcbb;border-radius:14px;padding:16px;text-align:center;font-size:15px;font-weight:700;color:#1b7a4b;}
+</style>
+</head>
+<body>
+<div id="confetti"></div>
+<header>
+  <h1>🧳 Equipaje campamento Begabung</h1>
+  <p>Talent Lab · 8 días / 7 noches (28 jun – 5 jul) · marca cada cosa que compres</p>
+  <div class="legend"><span><i class="dotP"></i> Pedro</span><span><i class="dotC"></i> Carlos</span></div>
+  <div class="progress-wrap"><div class="progress-bar" id="bar"></div></div>
+  <div class="progress-txt" id="ptxt">Pulsa P (Pedro) y C (Carlos)</div>
+  <div class="perchild">
+    <div>Pedro <b id="pPedro">0 %</b></div>
+    <div>Carlos <b id="pCarlos">0 %</b></div>
+  </div>
+</header>
+
+<div class="tools">
+  <button data-all="p">✓ Todo de Pedro</button>
+  <button data-all="c">✓ Todo de Carlos</button>
+  <button class="reset" id="resetBtn">↺ Empezar de cero</button>
+</div>
+
+<div class="info">📌 Marca TODA la ropa y objetos con el nombre del niño. Toca <b>P</b> y <b>C</b> según vayas comprando para cada uno. Lo que marques se guarda en este móvil.</div>
+
+<section>
+  <div class="sec-title">👕 Ropa</div>
+  <div class="item"><span class="lbl">9 camisetas</span><span class="checks"><label class="chk p"><input type="checkbox" id="i1p"><span>P</span></label><label class="chk c"><input type="checkbox" id="i1c"><span>C</span></label></span></div>
+  <div class="item"><span class="lbl">4 pantalones cortos</span><span class="checks"><label class="chk p"><input type="checkbox" id="i2p"><span>P</span></label><label class="chk c"><input type="checkbox" id="i2c"><span>C</span></label></span></div>
+  <div class="item"><span class="lbl">2 pantalones largos ligeros</span><span class="checks"><label class="chk p"><input type="checkbox" id="i3p"><span>P</span></label><label class="chk c"><input type="checkbox" id="i3c"><span>C</span></label></span></div>
+  <div class="item"><span class="lbl">9 mudas de ropa interior</span><span class="checks"><label class="chk p"><input type="checkbox" id="i4p"><span>P</span></label><label class="chk c"><input type="checkbox" id="i4c"><span>C</span></label></span></div>
+  <div class="item"><span class="lbl">9 pares de calcetines</span><span class="checks"><label class="chk p"><input type="checkbox" id="i5p"><span>P</span></label><label class="chk c"><input type="checkbox" id="i5c"><span>C</span></label></span></div>
+  <div class="item"><span class="lbl">2 sudaderas o chaquetas finas (noches)</span><span class="checks"><label class="chk p"><input type="checkbox" id="i6p"><span>P</span></label><label class="chk c"><input type="checkbox" id="i6c"><span>C</span></label></span></div>
+  <div class="item"><span class="lbl">1 pijama</span><span class="checks"><label class="chk p"><input type="checkbox" id="i7p"><span>P</span></label><label class="chk c"><input type="checkbox" id="i7c"><span>C</span></label></span></div>
+  <div class="item"><span class="lbl">1 chubasquero ligero o cortavientos</span><span class="checks"><label class="chk p"><input type="checkbox" id="i8p"><span>P</span></label><label class="chk c"><input type="checkbox" id="i8c"><span>C</span></label></span></div>
+  <div class="item"><span class="lbl">1 muda completa de repuesto</span><span class="checks"><label class="chk p"><input type="checkbox" id="i9p"><span>P</span></label><label class="chk c"><input type="checkbox" id="i9c"><span>C</span></label></span></div>
+  <div class="item"><span class="lbl">1 camiseta blanca para pintar</span><span class="checks"><label class="chk p"><input type="checkbox" id="i10p"><span>P</span></label><label class="chk c"><input type="checkbox" id="i10c"><span>C</span></label></span></div>
+</section>
+
+<section>
+  <div class="sec-title">👟 Calzado</div>
+  <div class="item"><span class="lbl">Zapatillas deportivas cómodas (actividades y senderismo)</span><span class="checks"><label class="chk p"><input type="checkbox" id="i11p"><span>P</span></label><label class="chk c"><input type="checkbox" id="i11c"><span>C</span></label></span></div>
+  <div class="item"><span class="lbl">2º par de zapatillas (muy recomendable)</span><span class="checks"><label class="chk p"><input type="checkbox" id="i12p"><span>P</span></label><label class="chk c"><input type="checkbox" id="i12c"><span>C</span></label></span></div>
+  <div class="item"><span class="lbl">Chanclas para piscina y duchas</span><span class="checks"><label class="chk p"><input type="checkbox" id="i13p"><span>P</span></label><label class="chk c"><input type="checkbox" id="i13c"><span>C</span></label></span></div>
+</section>
+
+<section>
+  <div class="sec-title">🏊 Piscina</div>
+  <div class="item"><span class="lbl">2 bañadores</span><span class="checks"><label class="chk p"><input type="checkbox" id="i14p"><span>P</span></label><label class="chk c"><input type="checkbox" id="i14c"><span>C</span></label></span></div>
+  <div class="item"><span class="lbl">Toalla de piscina</span><span class="checks"><label class="chk p"><input type="checkbox" id="i15p"><span>P</span></label><label class="chk c"><input type="checkbox" id="i15c"><span>C</span></label></span></div>
+</section>
+
+<section>
+  <div class="sec-title">☀️ Protección solar</div>
+  <div class="item"><span class="lbl">Gorra o sombrero</span><span class="checks"><label class="chk p"><input type="checkbox" id="i16p"><span>P</span></label><label class="chk c"><input type="checkbox" id="i16c"><span>C</span></label></span></div>
+  <div class="item"><span class="lbl">Crema solar de alta protección</span><span class="checks"><label class="chk p"><input type="checkbox" id="i17p"><span>P</span></label><label class="chk c"><input type="checkbox" id="i17c"><span>C</span></label></span></div>
+</section>
+
+<section>
+  <div class="sec-title">🌙 Noche de estrellas</div>
+  <div class="item"><span class="lbl">Saco de dormir</span><span class="checks"><label class="chk p"><input type="checkbox" id="i18p"><span>P</span></label><label class="chk c"><input type="checkbox" id="i18c"><span>C</span></label></span></div>
+  <div class="item"><span class="lbl">Linterna o frontal (pilas revisadas)</span><span class="checks"><label class="chk p"><input type="checkbox" id="i19p"><span>P</span></label><label class="chk c"><input type="checkbox" id="i19c"><span>C</span></label></span></div>
+  <div class="item"><span class="lbl">Ropa de abrigo ligera (actividad nocturna)</span><span class="checks"><label class="chk p"><input type="checkbox" id="i20p"><span>P</span></label><label class="chk c"><input type="checkbox" id="i20c"><span>C</span></label></span></div>
+</section>
+
+<section>
+  <div class="sec-title">🧼 Aseo personal</div>
+  <div class="item"><span class="lbl">Cepillo de dientes</span><span class="checks"><label class="chk p"><input type="checkbox" id="i21p"><span>P</span></label><label class="chk c"><input type="checkbox" id="i21c"><span>C</span></label></span></div>
+  <div class="item"><span class="lbl">Pasta de dientes</span><span class="checks"><label class="chk p"><input type="checkbox" id="i22p"><span>P</span></label><label class="chk c"><input type="checkbox" id="i22c"><span>C</span></label></span></div>
+  <div class="item"><span class="lbl">Gel y champú</span><span class="checks"><label class="chk p"><input type="checkbox" id="i23p"><span>P</span></label><label class="chk c"><input type="checkbox" id="i23c"><span>C</span></label></span></div>
+  <div class="item"><span class="lbl">Cepillo o peine</span><span class="checks"><label class="chk p"><input type="checkbox" id="i24p"><span>P</span></label><label class="chk c"><input type="checkbox" id="i24c"><span>C</span></label></span></div>
+  <div class="item"><span class="lbl">Toalla de ducha</span><span class="checks"><label class="chk p"><input type="checkbox" id="i25p"><span>P</span></label><label class="chk c"><input type="checkbox" id="i25c"><span>C</span></label></span></div>
+  <div class="item"><span class="lbl">Pañuelos de papel</span><span class="checks"><label class="chk p"><input type="checkbox" id="i26p"><span>P</span></label><label class="chk c"><input type="checkbox" id="i26c"><span>C</span></label></span></div>
+</section>
+
+<section>
+  <div class="sec-title">🎒 Otros imprescindibles</div>
+  <div class="item"><span class="lbl">Cantimplora o botella reutilizable</span><span class="checks"><label class="chk p"><input type="checkbox" id="i27p"><span>P</span></label><label class="chk c"><input type="checkbox" id="i27c"><span>C</span></label></span></div>
+  <div class="item"><span class="lbl">Mochila pequeña para excursiones</span><span class="checks"><label class="chk p"><input type="checkbox" id="i28p"><span>P</span></label><label class="chk c"><input type="checkbox" id="i28c"><span>C</span></label></span></div>
+  <div class="item"><span class="lbl">Bolsa para la ropa sucia</span><span class="checks"><label class="chk p"><input type="checkbox" id="i29p"><span>P</span></label><label class="chk c"><input type="checkbox" id="i29c"><span>C</span></label></span></div>
+  <div class="item"><span class="lbl">Bolsa impermeable para ropa mojada</span><span class="checks"><label class="chk p"><input type="checkbox" id="i30p"><span>P</span></label><label class="chk c"><input type="checkbox" id="i30c"><span>C</span></label></span></div>
+  <div class="item"><span class="lbl">Sábana bajera</span><span class="checks"><label class="chk p"><input type="checkbox" id="i31p"><span>P</span></label><label class="chk c"><input type="checkbox" id="i31c"><span>C</span></label></span></div>
+</section>
+
+<div class="done-banner" id="doneBanner">🎉 ¡Todo comprado! Pedro y Carlos listos para el campamento 🏕️</div>
+
+<div class="note">
+  <h3>⚠️ A tener en cuenta</h3>
+  <ul>
+    <li>No es necesario llevar esterilla.</li>
+    <li>No hay servicio de lavandería durante el campamento.</li>
+    <li>Maleta o bolsa de viaje fácil de transportar; evitar equipaje excesivo.</li>
+    <li>No traer objetos de valor ni grandes cantidades de dinero.</li>
+    <li>La medicación, si la hubiera, se entrega según indicaciones de la organización.</li>
+    <li>Todo debe venir identificado con el nombre del participante.</li>
+  </ul>
+</div>
+
+<div class="note tip">
+  <h3>💡 Truco de organización</h3>
+  Prepara una bolsa pequeña por día (tipo congelación) con el conjunto completo: pantalón, camiseta, calcetines y muda. Etiqueta cada bolsa con el día (lunes, martes…) y los niños localizan su ropa fácilmente.
+</div>
+
+<div class="foot">Hecho con cariño para Pedro y Carlos 🌳</div>
+
+<script>
+  var KEY="equipaje_begabung_v3";
+  var boxes=Array.prototype.slice.call(document.querySelectorAll('input[type=checkbox]'));
+  var saved={};
+  try{ saved=JSON.parse(localStorage.getItem(KEY)||"{}"); }catch(e){}
+  boxes.forEach(function(b){ if(saved[b.id]) b.checked=true; });
+  var wasComplete=false;
+
+  function persist(){ try{ localStorage.setItem(KEY,JSON.stringify(saved)); }catch(e){} }
+
+  function pct(filter){
+    var list=boxes.filter(filter), done=0;
+    list.forEach(function(b){ if(b.checked) done++; });
+    return list.length? Math.round(done/list.length*100):0;
+  }
+
+  function update(){
+    var done=0; boxes.forEach(function(b){ if(b.checked) done++; });
+    var p=Math.round(done/boxes.length*100);
+    document.getElementById('bar').style.width=p+'%';
+    document.getElementById('ptxt').textContent=p+' %  ('+done+' de '+boxes.length+')';
+    document.getElementById('pPedro').textContent=pct(function(b){return b.id.slice(-1)==='p';})+' %';
+    document.getElementById('pCarlos').textContent=pct(function(b){return b.id.slice(-1)==='c';})+' %';
+    var complete=(done===boxes.length);
+    document.getElementById('doneBanner').style.display=complete?'block':'none';
+    if(complete && !wasComplete) celebrate();
+    wasComplete=complete;
+  }
+
+  boxes.forEach(function(b){
+    b.addEventListener('change',function(){
+      if(b.checked) saved[b.id]=true; else delete saved[b.id];
+      persist(); update();
+    });
+  });
+
+  document.querySelectorAll('[data-all]').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      var suf=btn.getAttribute('data-all');
+      var target=boxes.filter(function(b){return b.id.slice(-1)===suf;});
+      var allOn=target.every(function(b){return b.checked;});
+      target.forEach(function(b){ b.checked=!allOn; if(b.checked) saved[b.id]=true; else delete saved[b.id]; });
+      persist(); update();
+    });
+  });
+
+  document.getElementById('resetBtn').addEventListener('click',function(){
+    if(!confirm('¿Seguro que quieres desmarcar todo y empezar de cero?')) return;
+    boxes.forEach(function(b){ b.checked=false; });
+    saved={}; persist(); update();
+  });
+
+  function celebrate(){
+    var c=document.getElementById('confetti');
+    while(c.firstChild) c.removeChild(c.firstChild);
+    c.style.display='block';
+    var colors=['#ffd23f','#5ee0a0','#1b66d6','#ff7eb3','#ff9f43'];
+    for(var i=0;i<80;i++){
+      var d=document.createElement('div');
+      d.className='conf';
+      d.style.left=(i/80*100)+'%';
+      d.style.background=colors[i%colors.length];
+      d.style.animationDuration=(1.8+(i%5)*0.4)+'s';
+      d.style.animationDelay=((i%10)*0.08)+'s';
+      c.appendChild(d);
+    }
+    setTimeout(function(){ c.style.display='none'; },4200);
+  }
+
+  update();
+</script>
+</body>
+</html>
